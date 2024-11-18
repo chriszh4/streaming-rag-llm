@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=5 HF_HOME=/storage/chriszh/projects/streaming-llm/models python ragLLM/run_streaming_llama.py  --enable_streaming --model_name_or_path="lmsys/vicuna-7b-v1.5"
