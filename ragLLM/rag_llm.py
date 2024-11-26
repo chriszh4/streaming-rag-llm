@@ -76,7 +76,7 @@ class RagLLM(CustomLLM):
     @torch.no_grad()
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs: Any):
-        print("PROMPT: ", prompt)
+        #print("PROMPT: ", prompt)
         #return CompletionResponse(text="BOO")
         past_key_values = None
         #for idx, prompt in enumerate(prompts):
@@ -93,8 +93,6 @@ class RagLLM(CustomLLM):
             self.model, self.tokenizer, input_ids, past_key_values, self.max_gen_len
         )
         return CompletionResponse(text=output_base + output_str)
-
-
     
     @llm_completion_callback()
     def stream_complete(
