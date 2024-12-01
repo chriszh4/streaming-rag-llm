@@ -44,15 +44,7 @@ def main(args):
 
     # Define LlamaIndex parameters
     Settings.llm = rag_llm
-    """
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name="BAAI/bge-small-en-v1.5"
-    )
-    """
     Settings.embed_model = SimpleEmbedding()
-    
-    #Settings.embed_model = HuggingFaceBgeEmbeddings(model_name="BAAI/bge-base-en")
-    #Settings.embed_model = OpenAIEmbedding()
 
     # Answers to the QA pairs are unreleased
     novels_root_dir = "./eval_data/NovelQA/Books/PublicDomain"
@@ -94,13 +86,14 @@ def parse_questions(qa_path):
 
 def run_query_engine(documents, qa_template_str, questions):
     parser = SentenceSplitter(
-        chunk_size=1024,
-        chunk_overlap=200
+        chunk_size=200,
+        chunk_overlap=20
     )
     nodes = parser.get_nodes_from_documents(documents)
     index = VectorStoreIndex(nodes)
 
-    for query in questions:
+    for idx, query in enumerate(questions):
+        print(f"Question {idx + 1}:\n")
         question = query["Question"]
         answer = query["Answer"]
         choices = [f"{letter}: {choice}" for letter, choice in query["Options"].items()]
@@ -109,11 +102,17 @@ def run_query_engine(documents, qa_template_str, questions):
         qa_template = PromptTemplate(qa_template_str.replace("<choices>", choices))
 
         query_engine = index.as_query_engine(
-            similarity_top_k=2,
+            similarity_top_k=10,
             text_qa_template=qa_template
         )
 
-        print(query_engine.query(question))
+        response = query_engine.query(question).response
+        PRINT_CONTEXT = True
+        if not PRINT_CONTEXT:
+            response_answer = response.split("Instructions:")[-1]
+            print("Instructions:" + response_answer)
+        else:
+            print(response)
         print(f"The correct answer was {answer}")
         print("\n\n\n\n*****************************")
 
@@ -126,6 +125,7 @@ if __name__ == "__main__":
     parser.add_argument("--enable_streaming", action="store_true")
     parser.add_argument("--start_size", type=int, default=4)
     parser.add_argument("--recent_size", type=int, default=2000)
+
     args = parser.parse_args()
 
     main(args)
