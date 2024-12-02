@@ -84,7 +84,7 @@ class RagLLM(CustomLLM):
     @torch.no_grad()
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs: Any):
-        use_rag = False
+        use_rag = True
         if use_rag:
             prompt = self.clean_prompt(prompt)
         else:
