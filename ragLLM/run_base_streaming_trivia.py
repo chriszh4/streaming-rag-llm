@@ -9,10 +9,11 @@ import os
 import time
 import re
 import sys
+from tqdm import tqdm
 
 from streaming_llm.utils import load, download_url, load_jsonl
 from streaming_llm.enable_streaming_llm import enable_streaming_llm
-from ragLLM.rag_llm import RagLLM
+from ragLLM.streaming_llm_base import StreamingLLM
 from llama_index.core import Settings
 from llama_index.core import (
     VectorStoreIndex,
@@ -40,10 +41,10 @@ def main(args):
     else:
         kv_cache = None
 
-    rag_llm = RagLLM(model=model, tokenizer=tokenizer, kv_cache=kv_cache, max_gen_len=1000)
+    ragless_llm = StreamingLLM(model=model, tokenizer=tokenizer, kv_cache=kv_cache, max_gen_len=1000)
 
     # Define LlamaIndex parameters
-    Settings.llm = rag_llm
+    Settings.llm = ragless_llm
     Settings.embed_model = SimpleEmbedding()
 
     # Answers to the QA pairs are unreleased
@@ -69,12 +70,9 @@ def main(args):
 
     qa_template_str = """You are a trivia expert. Using your knowledge and the following evidence, please answer the question.
         
-        Relevant evidence:
-        {context_str}
-        
-        Question: {query_str}"""
+        Question: <question_str>"""
 
-    run_query_engine(documents, qa_template_str, questions)
+    run_query_engine(ragless_llm, documents, qa_template_str, questions)
     
 def load_evidence(evidence_files):
     parser = FlatReader()
@@ -91,43 +89,35 @@ def parse_questions(qa_path):
         filtered_questions = [q for q in questions["Data"] if q["SearchResults"]]
         return filtered_questions
 
-def run_query_engine(documents, qa_template_str, questions):
-    CHUNK_SIZE = 2000
-    SIMILARITY_TOP_K = 1
+def run_query_engine(llm, documents, qa_template_str, questions):
     parser = SentenceSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=10
+        chunk_size=200,
+        chunk_overlap=20
     )
     nodes = parser.get_nodes_from_documents(documents)
-    index = VectorStoreIndex(nodes, show_progress=True)
+    
+    # Iterate through the nodes and extract text
+    # for node in tqdm(nodes):
+    #    llm.complete(node.text)
+
     answer_list = []
     for idx, query in enumerate(questions):
         print(f"Question {idx + 1}:\n")
         question = query["Question"]
         answer = query["Answer"]
 
-        qa_template = PromptTemplate(qa_template_str)
+        qa_template = qa_template_str.replace("<question_str>", question)
 
-        query_engine = index.as_query_engine(
-            similarity_top_k=SIMILARITY_TOP_K,
-            text_qa_template=qa_template
-        )
+        response = llm.complete(qa_template).text
+        print(response)
 
-        response = query_engine.query(question).response
-        PRINT_CONTEXT = True
-        if not PRINT_CONTEXT:
-            response_answer = response.split("Instructions:")[-1]
-            print("Instructions:" + response_answer)
-        else:
-            response_answer = response
-            print(response)
         print(f"\nThe correct answer was {answer}")
         print("\n\n\n\n*****************************")
-        extracted_answer = response_answer.split("ASSISTANT:")[-1]
+        extracted_answer = response.split("ASSISTANT:")[-1]
         answer_list.append(extracted_answer)
 
     # Save extracted answers to file as json
-    with open(f"ragLLM/eval_results/bge_rag_extracted_answers_{CHUNK_SIZE}_{SIMILARITY_TOP_K}.json", "w") as f:
+    with open("ragLLM/eval_results/streaming_extracted_answers.json", "w") as f:
         json.dump(answer_list, f)
 
 

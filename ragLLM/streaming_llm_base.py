@@ -9,7 +9,7 @@ from typing import Optional, List, Mapping, Any
 from pydantic import BaseModel, Field
 from llama_index.core.llms.callbacks import llm_completion_callback
 
-class RagLLM(CustomLLM):
+class StreamingLLM(CustomLLM):
     model: Any = Field(..., description="The model object")
     tokenizer: Any = Field(..., description="The tokenizer object")
     kv_cache: Optional[Any] = Field(None, description="Key-value cache for the model")
@@ -71,20 +71,14 @@ class RagLLM(CustomLLM):
             if pred_token_idx == tokenizer.eos_token_id:
                 break
         output_str += " ".join(generated_text[pos:])
-        return past_key_values, output_str
-
-    def clean_prompt(self, prompt):
-        lines = prompt.split('\n')
-        cleaned_lines = [line for line in lines if not any(
-            field in line.lower() for field in ['filename:', 'extension:', 'file_path:']
-        )]
-        return '\n'.join(cleaned_lines)
-        
+        return past_key_values, output_str        
 
     @torch.no_grad()
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs: Any):
-        prompt = self.clean_prompt(prompt)
+        # Remove everything before the question
+        prompt = prompt.split("Question:")[-1]
+        prompt = "Question:" + prompt
 
         past_key_values = None
         prompt = "USER: " + prompt + "\n\nASSISTANT: "
