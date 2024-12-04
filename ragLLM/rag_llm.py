@@ -105,4 +105,5 @@ class RagLLM(CustomLLM):
     def stream_complete(
         self, prompt: str
     ) -> CompletionResponseGen:
-        yield "HUH"
+        assert False, "stream_complete not implemented" # not needed for this application
+        yield CompletionResponse(text="")

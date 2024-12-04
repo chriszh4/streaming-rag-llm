@@ -7,7 +7,7 @@ from llama_index.core.embeddings import BaseEmbedding
 class SimpleEmbedding(BaseEmbedding):
     def __init__(
         self,
-        model_name: str = "BAAI/bge-large-en", #"distilbert-base-uncased",
+        model_name: str = "distilbert-base-uncased", #"BAAI/bge-large-en",
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)

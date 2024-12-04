@@ -92,7 +92,7 @@ def parse_questions(qa_path):
         return filtered_questions
 
 def run_query_engine(documents, qa_template_str, questions):
-    CHUNK_SIZE = 2000
+    CHUNK_SIZE = 1000
     SIMILARITY_TOP_K = 1
     parser = SentenceSplitter(
         chunk_size=CHUNK_SIZE,
@@ -100,6 +100,8 @@ def run_query_engine(documents, qa_template_str, questions):
     )
     nodes = parser.get_nodes_from_documents(documents)
     index = VectorStoreIndex(nodes, show_progress=True)
+    print("Press any key to continue...")
+    input()
     answer_list = []
     for idx, query in enumerate(questions):
         print(f"Question {idx + 1}:\n")
