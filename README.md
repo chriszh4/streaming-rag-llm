@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/6279cb3c-ec01-4909-93a8-b22260de8e8b
 We adapt StreamingLLM with RAG to support effective infinite context in streaming applications.
 
 ## Abstract
-TODO
+Ensuring continuity in streaming applications for large language models (LLMs) remains a significant challenge, even with advancements like StreamingLLM, which are constrained by a finite context window. We propose extending this capacity by integrating Retrieval-Augmented Generation (RAG) to enable persistent memory and dynamic context retrieval. Our approach results in an LLM capable of retaining and utilizing all past information, addressing the limitations of fixed context windows. To evaluate this enhanced capability, we conduct experiments on a question-answering benchmark, TriviaQA, and present discussions on limitations and performance on a new long-context benchmark, NovelQA. This work highlights the potential of RAG-augmented LLMs in long-context applications and real-world deployments requiring sustained coherence and memory.
 
 ## Usage
 
